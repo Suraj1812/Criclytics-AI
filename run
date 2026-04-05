@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+SOURCE_PATH="${BASH_SOURCE[0]}"
+while [[ -h "$SOURCE_PATH" ]]; do
+  SOURCE_DIR="$(cd -P "$(dirname "$SOURCE_PATH")" && pwd)"
+  SOURCE_PATH="$(readlink "$SOURCE_PATH")"
+  [[ "$SOURCE_PATH" != /* ]] && SOURCE_PATH="${SOURCE_DIR}/${SOURCE_PATH}"
+done
+ROOT_DIR="$(cd -P "$(dirname "$SOURCE_PATH")" && pwd)"
+cd "$ROOT_DIR"
+
+HOST="${HOST:-127.0.0.1}"
+PORT="${PORT:-8000}"
+CHECK_ONLY=0
+RELOAD_MODE=1
+
+log() {
+  printf '[criclytics] %s\n' "$*"
+}
+
+fail() {
+  printf '[criclytics] ERROR: %s\n' "$*" >&2
+  exit 1
+}
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./run            Set up the local environment and start Criclytics AI
+  ./run --check    Run setup and smoke checks without starting the server
+  ./run --no-reload Start without the auto-reload watcher
+
+Optional environment variables:
+  HOST=127.0.0.1
+  PORT=8000
+EOF
+}
+
+hash_file() {
+  local target="$1"
+
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$target" | awk '{print $1}'
+    return
+  fi
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$target" | awk '{print $1}'
+    return
+  fi
+
+  python3 - <<'PY' "$target"
+import hashlib
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+print(hashlib.sha256(path.read_bytes()).hexdigest())
+PY
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --check)
+      CHECK_ONLY=1
+      ;;
+    --no-reload)
+      RELOAD_MODE=0
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      fail "Unknown option: $arg"
+      ;;
+  esac
+done
+
+[[ -f "backend/main.py" ]] || fail "backend/main.py is missing."
+[[ -f "backend/requirements.txt" ]] || fail "backend/requirements.txt is missing."
+[[ -f "frontend/index.html" ]] || fail "frontend/index.html is missing."
+
+command -v python3 >/dev/null 2>&1 || fail "python3 is required but was not found."
+
+if [[ ! -f ".env" ]]; then
+  cp ".env.example" ".env"
+  log "Created .env from .env.example"
+fi
+
+if [[ ! -x ".venv/bin/python" ]]; then
+  log "Creating local virtual environment"
+  python3 -m venv ".venv"
+fi
+
+VENV_PYTHON="$ROOT_DIR/.venv/bin/python"
+STAMP_FILE="$ROOT_DIR/.venv/.requirements.sha256"
+REQUIREMENTS_HASH="$(hash_file "backend/requirements.txt")"
+
+ensure_dependencies() {
+  local should_install=0
+  local imports_ready=0
+
+  if "$VENV_PYTHON" -c "import fastapi, uvicorn, redis, pydantic_settings" >/dev/null 2>&1; then
+    imports_ready=1
+  fi
+
+  if [[ "$imports_ready" -eq 0 ]]; then
+    should_install=1
+  elif [[ -f "$STAMP_FILE" && "$(cat "$STAMP_FILE")" != "$REQUIREMENTS_HASH" ]]; then
+    should_install=1
+  fi
+
+  if [[ "$should_install" -eq 1 ]]; then
+    log "Installing backend dependencies"
+    "$VENV_PYTHON" -m pip install -r "backend/requirements.txt"
+    printf '%s\n' "$REQUIREMENTS_HASH" > "$STAMP_FILE"
+  else
+    log "Dependencies already up to date"
+    printf '%s\n' "$REQUIREMENTS_HASH" > "$STAMP_FILE"
+  fi
+}
+
+ensure_dependencies
+
+log "Running backend smoke checks"
+"$VENV_PYTHON" -m compileall backend >/dev/null
+
+HEALTH_URL="http://${HOST}:${PORT}/health"
+
+if command -v lsof >/dev/null 2>&1; then
+  PORT_PIDS="$(lsof -ti "tcp:${PORT}" -sTCP:LISTEN || true)"
+  if [[ -n "$PORT_PIDS" ]]; then
+    if command -v curl >/dev/null 2>&1 && curl -fsS "$HEALTH_URL" >/dev/null 2>&1; then
+      log "Criclytics AI is already running at http://${HOST}:${PORT}"
+      exit 0
+    fi
+
+    fail "Port ${PORT} is already in use by PID(s): ${PORT_PIDS}. Stop that process or start with PORT=<new-port> ./run"
+  fi
+fi
+
+if [[ "$CHECK_ONLY" -eq 1 ]]; then
+  log "All checks passed"
+  exit 0
+fi
+
+log "Starting Criclytics AI at http://${HOST}:${PORT}"
+log "Press Ctrl+C to stop"
+
+if [[ "$RELOAD_MODE" -eq 1 ]]; then
+  exec "$VENV_PYTHON" -m uvicorn backend.main:app --host "$HOST" --port "$PORT" --reload
+fi
+
+exec "$VENV_PYTHON" -m uvicorn backend.main:app --host "$HOST" --port "$PORT"

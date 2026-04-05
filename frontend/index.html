@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Criclytics AI | Real-Time Cricket Match Insights Dashboard</title>
+    <meta
+      name="description"
+      content="Criclytics AI is a real-time cricket analytics dashboard that transforms live match inputs into fast, grounded insights with pressure, momentum, stability, and confidence scoring."
+    />
+    <meta
+      name="keywords"
+      content="cricket analytics, cricket insights, live cricket dashboard, cricket AI, match intelligence, cricket run rate, pressure score, momentum analysis"
+    />
+    <meta name="application-name" content="Criclytics AI" />
+    <meta name="author" content="Criclytics AI" />
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+    <meta name="theme-color" content="#0B1220" />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Criclytics AI" />
+    <meta property="og:title" content="Criclytics AI | Real-Time Cricket Match Insights Dashboard" />
+    <meta
+      property="og:description"
+      content="Professional live cricket intelligence with deterministic insight generation, signal scoring, and dense analytics output."
+    />
+    <meta property="og:image" content="/logo.svg" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:alt" content="Criclytics AI logo" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Criclytics AI | Real-Time Cricket Match Insights Dashboard" />
+    <meta
+      name="twitter:description"
+      content="Signal-driven cricket match intelligence with real-time insight generation and professional analytics UI."
+    />
+    <meta name="twitter:image" content="/logo.svg" />
+    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+    <link rel="apple-touch-icon" href="./logo.svg" />
+    <link rel="mask-icon" href="./logo.svg" color="#0B1220" />
+    <link rel="manifest" href="./site.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (() => {
+        try {
+          const savedTheme = localStorage.getItem("criclytics-theme");
+          const theme = savedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          document.documentElement.dataset.theme = theme;
+        } catch {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ['"Space Grotesk"', "sans-serif"],
+              body: ['"Manrope"', "sans-serif"],
+            },
+            colors: {
+              chrome: "rgb(var(--color-chrome) / <alpha-value>)",
+              panel: "rgb(var(--color-panel) / <alpha-value>)",
+              inset: "rgb(var(--color-inset) / <alpha-value>)",
+              line: "rgb(var(--color-line) / <alpha-value>)",
+              copy: "rgb(var(--color-copy) / <alpha-value>)",
+              muted: "rgb(var(--color-muted) / <alpha-value>)",
+              soft: "rgb(var(--color-soft) / <alpha-value>)",
+              live: "rgb(var(--color-live) / <alpha-value>)",
+            },
+            boxShadow: {
+              panel: "var(--panel-shadow)",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      :root {
+        color-scheme: dark;
+        --color-chrome: 11 18 32;
+        --color-panel: 17 26 42;
+        --color-inset: 13 22 38;
+        --color-line: 34 48 71;
+        --color-copy: 231 237 246;
+        --color-muted: 141 155 176;
+        --color-soft: 102 116 139;
+        --color-live: 94 234 212;
+        --action-bg: 231 237 246;
+        --action-copy: 11 18 32;
+        --action-border: 49 64 86;
+        --action-disabled-bg: 27 39 56;
+        --action-disabled-copy: 141 155 176;
+        --panel-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+      }
+
+      :root[data-theme="light"] {
+        color-scheme: light;
+        --color-chrome: 241 245 249;
+        --color-panel: 255 255 255;
+        --color-inset: 246 248 252;
+        --color-line: 191 203 218;
+        --color-copy: 15 23 42;
+        --color-muted: 63 77 99;
+        --color-soft: 82 97 121;
+        --color-live: 8 145 178;
+        --action-bg: 15 23 42;
+        --action-copy: 248 250 252;
+        --action-border: 203 213 225;
+        --action-disabled-bg: 226 232 240;
+        --action-disabled-copy: 100 116 139;
+        --panel-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+      }
+
+      body {
+        font-family: "Manrope", sans-serif;
+        background: rgb(var(--color-chrome));
+        color: rgb(var(--color-copy));
+        transition: background-color 180ms ease, color 180ms ease;
+      }
+
+      .panel-card {
+        background: rgb(var(--color-panel) / 0.94);
+        border: 1px solid rgb(var(--color-line) / 0.44);
+        box-shadow: var(--panel-shadow);
+      }
+
+      .metric-card {
+        min-height: 104px;
+        border-radius: 18px;
+        border: 1px solid rgb(var(--color-line) / 0.4);
+        background: rgb(var(--color-inset) / 0.98);
+        padding: 1rem;
+        transition: border-color 180ms ease, background-color 180ms ease;
+      }
+
+      .input-field {
+        height: 44px;
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgb(var(--color-line) / 0.44);
+        background: rgb(var(--color-inset));
+        padding: 0 0.875rem;
+        color: rgb(var(--color-copy));
+        transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+      }
+
+      .input-field::placeholder {
+        color: rgb(var(--color-soft));
+      }
+
+      .input-field:focus {
+        outline: none;
+        border-color: rgb(var(--color-copy) / 0.18);
+        box-shadow: 0 0 0 1px rgb(var(--color-copy) / 0.1);
+      }
+
+      .input-field[aria-invalid="true"] {
+        border-color: rgba(248, 113, 113, 0.7);
+        box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.18);
+      }
+
+      .input-field[aria-invalid="true"]:focus {
+        border-color: rgba(248, 113, 113, 0.82);
+        box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.28);
+      }
+
+      .meta-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgb(var(--color-muted));
+      }
+
+      .signal-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        border: 1px solid rgb(var(--color-line) / 0.4);
+        padding: 0.28rem 0.55rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .signal-badge--low,
+      .signal-badge--neutral,
+      .signal-badge--confidence {
+        border-color: rgba(148, 163, 184, 0.36);
+        background: rgba(100, 116, 139, 0.12);
+        color: rgb(var(--color-copy));
+      }
+
+      .signal-badge--medium {
+        border-color: rgba(245, 158, 11, 0.28);
+        background: rgba(245, 158, 11, 0.12);
+        color: rgb(253 224 71);
+      }
+
+      .signal-badge--high,
+      .signal-badge--negative {
+        border-color: rgba(251, 113, 133, 0.28);
+        background: rgba(251, 113, 133, 0.12);
+        color: rgb(253 164 175);
+      }
+
+      .signal-badge--positive {
+        border-color: rgba(52, 211, 153, 0.28);
+        background: rgba(52, 211, 153, 0.12);
+        color: rgb(110 231 183);
+      }
+
+      .signal-badge--stable {
+        border-color: rgba(56, 189, 248, 0.28);
+        background: rgba(56, 189, 248, 0.12);
+        color: rgb(125 211 252);
+      }
+
+      .signal-badge--unstable {
+        border-color: rgba(249, 115, 22, 0.28);
+        background: rgba(249, 115, 22, 0.12);
+        color: rgb(253 186 116);
+      }
+
+      :root[data-theme="light"] .signal-badge--low,
+      :root[data-theme="light"] .signal-badge--neutral,
+      :root[data-theme="light"] .signal-badge--confidence {
+        border-color: rgba(100, 116, 139, 0.24);
+        background: rgba(148, 163, 184, 0.1);
+        color: rgb(30 41 59);
+      }
+
+      :root[data-theme="light"] .signal-badge--medium {
+        border-color: rgba(217, 119, 6, 0.22);
+        background: rgba(245, 158, 11, 0.1);
+        color: rgb(146 64 14);
+      }
+
+      :root[data-theme="light"] .signal-badge--high,
+      :root[data-theme="light"] .signal-badge--negative {
+        border-color: rgba(225, 29, 72, 0.18);
+        background: rgba(244, 63, 94, 0.08);
+        color: rgb(159 18 57);
+      }
+
+      :root[data-theme="light"] .signal-badge--positive {
+        border-color: rgba(5, 150, 105, 0.18);
+        background: rgba(16, 185, 129, 0.08);
+        color: rgb(6 95 70);
+      }
+
+      :root[data-theme="light"] .signal-badge--stable {
+        border-color: rgba(8, 145, 178, 0.18);
+        background: rgba(34, 211, 238, 0.08);
+        color: rgb(14 116 144);
+      }
+
+      :root[data-theme="light"] .signal-badge--unstable {
+        border-color: rgba(234, 88, 12, 0.18);
+        background: rgba(249, 115, 22, 0.08);
+        color: rgb(154 52 18);
+      }
+
+      .error-banner {
+        border: 1px solid rgba(248, 113, 113, 0.22);
+        background: rgba(248, 113, 113, 0.1);
+        color: rgb(254 202 202);
+      }
+
+      :root[data-theme="light"] .error-banner {
+        border-color: rgba(225, 29, 72, 0.16);
+        background: rgba(244, 63, 94, 0.06);
+        color: rgb(159 18 57);
+      }
+
+      .metric-copy-positive {
+        color: rgb(125 211 252);
+      }
+
+      .metric-copy-negative {
+        color: rgb(253 224 71);
+      }
+
+      :root[data-theme="light"] .metric-copy-positive {
+        color: rgb(8 145 178);
+      }
+
+      :root[data-theme="light"] .metric-copy-negative {
+        color: rgb(180 83 9);
+      }
+
+      .action-button {
+        display: inline-flex;
+        height: 44px;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgb(var(--action-border));
+        background: rgb(var(--action-bg));
+        color: rgb(var(--action-copy));
+        font-size: 0.875rem;
+        font-weight: 700;
+        transition: transform 160ms ease, background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+      }
+
+      .action-button:hover:enabled {
+        transform: translateY(-1px);
+      }
+
+      .action-button:disabled {
+        cursor: not-allowed;
+        border-color: rgb(var(--action-border));
+        background: rgb(var(--action-disabled-bg));
+        color: rgb(var(--action-disabled-copy));
+      }
+
+      .theme-toggle {
+        position: fixed;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 40;
+        display: inline-flex;
+        height: 3.25rem;
+        width: 3.25rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        border: 1px solid rgb(var(--color-line) / 0.55);
+        background: rgb(var(--color-panel) / 0.96);
+        box-shadow: var(--panel-shadow);
+        color: rgb(var(--color-copy));
+        transition: transform 160ms ease, background-color 180ms ease, color 180ms ease;
+      }
+
+      .theme-toggle:hover {
+        transform: translateY(-2px);
+      }
+
+      .theme-toggle:focus-visible {
+        outline: 2px solid rgb(var(--color-copy) / 0.24);
+        outline-offset: 3px;
+      }
+
+      .insight-copy {
+        opacity: 0.38;
+        transform: translateY(6px);
+        transition: opacity 180ms ease, transform 180ms ease;
+      }
+
+      .insight-copy.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Criclytics AI",
+        "applicationCategory": "SportsApplication",
+        "operatingSystem": "Web",
+        "description": "A real-time cricket match insight dashboard that converts structured match data into grounded, fan-friendly intelligence.",
+        "featureList": [
+          "Real-time cricket match input analysis",
+          "Pressure, momentum, stability, and confidence scoring",
+          "Deterministic insight generation",
+          "Compact professional analytics interface"
+        ],
+        "image": "/logo.svg",
+        "logo": "/logo.svg"
+      }
+    </script>
+  </head>
+  <body class="bg-chrome text-copy antialiased">
+    <main class="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col gap-4 px-4 py-4 lg:px-6 lg:py-5">
+      <h1 class="sr-only">Criclytics AI real-time cricket match insights dashboard</h1>
+      <section class="grid flex-1 gap-4 xl:grid-cols-[minmax(340px,0.8fr)_minmax(0,1.2fr)]">
+        <section class="panel-card rounded-2xl p-4 lg:p-5">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p class="meta-label">Match Input</p>
+              <p class="mt-1 text-sm text-muted">Structured live state for deterministic insight synthesis.</p>
+            </div>
+            <p class="text-xs text-soft">Use cricket overs like 13.2</p>
+          </div>
+
+          <form id="analysis-form" class="space-y-4">
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="block">
+                <span class="meta-label">Runs</span>
+                <input id="runs" name="runs" type="number" min="0" max="500" value="118" class="input-field mt-2" required />
+              </label>
+
+              <label class="block">
+                <span class="meta-label">Wickets</span>
+                <input id="wickets" name="wickets" type="number" min="0" max="10" value="3" class="input-field mt-2" required />
+              </label>
+
+              <label class="block">
+                <span class="meta-label">Overs</span>
+                <input
+                  id="overs"
+                  name="overs"
+                  type="text"
+                  inputmode="decimal"
+                  value="13.2"
+                  placeholder="12.3"
+                  class="input-field mt-2"
+                  required
+                />
+              </label>
+
+              <label class="block">
+                <span class="meta-label">Required Rate</span>
+                <input
+                  id="required-rate"
+                  name="required-rate"
+                  type="number"
+                  min="0"
+                  max="36"
+                  step="0.01"
+                  value="8.90"
+                  class="input-field mt-2"
+                  required
+                />
+              </label>
+
+              <label class="block">
+                <span class="meta-label">Tone</span>
+                <select id="tone" name="tone" class="input-field mt-2">
+                  <option value="analytical" selected>Analytical</option>
+                  <option value="neutral">Neutral</option>
+                  <option value="aggressive">Aggressive</option>
+                </select>
+              </label>
+
+              <label class="block">
+                <span class="meta-label">Seed</span>
+                <input id="seed" name="seed" type="number" min="0" max="1000000" value="7" class="input-field mt-2" />
+              </label>
+            </div>
+
+            <button
+              id="submit-button"
+              type="submit"
+              class="action-button"
+            >
+              <span
+                id="submit-spinner"
+                class="hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-current/30 border-t-current"
+              ></span>
+              <span id="submit-label">Generate Insight</span>
+            </button>
+          </form>
+        </section>
+
+        <section class="grid gap-4">
+          <section class="panel-card rounded-2xl p-4 lg:p-5">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="meta-label">Insight</p>
+                <p class="mt-1 text-sm text-muted">Compact tactical readout from the current match state.</p>
+              </div>
+              <div id="response-meta" class="text-xs font-medium text-soft">Awaiting request</div>
+            </div>
+
+            <div class="mt-4 rounded-2xl border border-line bg-inset p-5">
+              <div
+                id="insight-output"
+                class="insight-copy is-visible min-h-[134px] font-display text-[clamp(1.45rem,2vw,2.15rem)] leading-tight tracking-tight text-copy"
+              >
+                Enter a live match state to generate a two-line insight.
+              </div>
+            </div>
+
+            <div
+              id="error-banner"
+              class="error-banner mt-4 hidden rounded-xl px-4 py-3 text-sm"
+            ></div>
+          </section>
+
+          <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <article class="metric-card">
+              <div class="flex items-start justify-between gap-3">
+                <p class="meta-label">Pressure</p>
+                <span id="pressure-signal" class="signal-badge">-</span>
+              </div>
+              <p id="pressure-score" class="mt-7 text-sm font-medium text-muted">Score --</p>
+            </article>
+
+            <article class="metric-card">
+              <div class="flex items-start justify-between gap-3">
+                <p class="meta-label">Momentum</p>
+                <span id="momentum-signal" class="signal-badge">-</span>
+              </div>
+              <p id="momentum-score" class="mt-7 text-sm font-medium text-muted">Score --</p>
+            </article>
+
+            <article class="metric-card">
+              <div class="flex items-start justify-between gap-3">
+                <p class="meta-label">Stability</p>
+                <span id="stability-signal" class="signal-badge">-</span>
+              </div>
+              <p id="stability-score" class="mt-7 text-sm font-medium text-muted">Score --</p>
+            </article>
+
+            <article class="metric-card">
+              <div class="flex items-start justify-between gap-3">
+                <p class="meta-label">Confidence</p>
+                <span id="confidence-badge" class="signal-badge">--</span>
+              </div>
+              <p id="confidence-score" class="mt-5 font-display text-3xl font-semibold tracking-tight text-copy">-</p>
+            </article>
+          </section>
+
+          <section class="grid gap-4 md:grid-cols-3">
+            <article class="metric-card">
+              <p class="meta-label">Current Run Rate</p>
+              <p id="current-rr" class="mt-6 font-display text-3xl font-semibold tracking-tight text-copy">-</p>
+            </article>
+
+            <article class="metric-card">
+              <p class="meta-label">Match Phase</p>
+              <p id="match-phase" class="mt-6 font-display text-3xl font-semibold tracking-tight text-copy">-</p>
+            </article>
+
+            <article class="metric-card">
+              <p class="meta-label">Required Rate Gap</p>
+              <p id="rate-gap" class="mt-6 font-display text-3xl font-semibold tracking-tight text-copy">-</p>
+            </article>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <button
+      id="theme-toggle"
+      type="button"
+      class="theme-toggle"
+      aria-label="Switch to light mode"
+      title="Switch theme"
+    >
+      <svg
+        id="theme-icon-sun"
+        class="h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2.5"></path>
+        <path d="M12 19.5V22"></path>
+        <path d="m4.93 4.93 1.77 1.77"></path>
+        <path d="m17.3 17.3 1.77 1.77"></path>
+        <path d="M2 12h2.5"></path>
+        <path d="M19.5 12H22"></path>
+        <path d="m4.93 19.07 1.77-1.77"></path>
+        <path d="m17.3 6.7 1.77-1.77"></path>
+      </svg>
+      <svg
+        id="theme-icon-moon"
+        class="hidden h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7.2 7.2 0 0 0 9.8 9.8Z"></path>
+      </svg>
+    </button>
+
+    <script src="./toast.js" defer></script>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
